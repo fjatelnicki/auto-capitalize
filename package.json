@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-auto-capitalize",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Automatically adjusts capitalization of wiki-style links based on their position in sentences",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

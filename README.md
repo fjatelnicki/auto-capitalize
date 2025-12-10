@@ -1,94 +1,107 @@
-# Obsidian Sample Plugin
+# Auto Capitalize Links
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An Obsidian plugin that automatically adjusts the capitalization of wiki-style links (`[[link]]`) based on their position in sentences.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Smart capitalization**: Automatically capitalizes links at the beginning of sentences
+- **Middle-of-sentence lowercasing**: Converts links to lowercase when they appear in the middle of sentences
+- **Customizable exception patterns**: Define patterns (like `Q:`, `A:`, `F:`, `T:`) where links should always be capitalized
+- **Command-based**: Activate the capitalization with a simple command from the command palette
 
-## First time developing plugins?
+## How It Works
 
-Quick starting guide for new plugin devs:
+The plugin processes all links in the active note based on these rules:
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. **Beginning of sentence**: Links at the start of a line or after sentence-ending punctuation (`.`, `?`, `!`) are capitalized
+   - Example: `[[power]] is important` → `[[Power]] is important`
+   - Example: `This is energy. [[power]] is different` → `This is energy. [[Power]] is different`
 
-## Releasing new releases
+2. **Middle of sentence**: Links in the middle of sentences are converted to lowercase
+   - Example: `The [[Power]] consumption` → `The [[power]] consumption`
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+3. **Exception patterns**: Links after configured patterns (like `Q:` or `A:`) are always capitalized
+   - Example: `Q: What is [[energy]]?` → `Q: What is [[energy]]?` (no change, already follows rule)
+   - Example: `A: [[power]]` → `A: [[Power]]` (capitalized after exception pattern)
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Usage
 
-## Adding your plugin to the community plugin list
+1. Open a note in Obsidian
+2. Open the command palette (`Ctrl/Cmd + P`)
+3. Search for "Auto-capitalize links in note"
+4. Run the command
+5. The plugin will process all links in the note and show a notification with the number of changes made
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Configuration
 
-## How to use
+### Adding Exception Patterns
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+Exception patterns are special labels after which links should always be capitalized (useful for flashcards, Q&A, etc.).
 
-## Manually installing the plugin
+1. Go to Settings → Auto Capitalize Links
+2. In the "Add new pattern" section, enter your pattern (e.g., `F:`, `T:`, `Note:`)
+3. Click "Add"
+4. The pattern will now be recognized when processing links
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Removing Exception Patterns
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+1. Go to Settings → Auto Capitalize Links
+2. Find the pattern you want to remove in the list
+3. Click the "Remove" button next to it
 
-## Funding URL
+**Default patterns**: `Q:` and `A:` are included by default for flashcard support.
 
-You can include funding URLs where people who use your plugin can financially support it.
+## Example
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+### Before:
+```
+[[Power]] is the rate at which work is done. In everyday language, [[Power]] is "how fast" you use fuel.
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+Q: In everyday language: is "how fast" you use fuel more like [[energy]] or [[power]]?
+A: [[power]]
 ```
 
-If you have multiple URLs, you can also do:
+### After running the command:
+```
+[[Power]] is the rate at which work is done. In everyday language, [[power]] is "how fast" you use fuel.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+Q: In everyday language: is "how fast" you use fuel more like [[energy]] or [[power]]?
+A: [[Power]]
 ```
 
-## API Documentation
+## Installation
 
-See https://github.com/obsidianmd/obsidian-api
+### Manual Installation
+
+1. Copy the `main.js` and `manifest.json` files to your vault's plugins folder:
+   - `<vault>/.obsidian/plugins/auto-capitalize/`
+2. Reload Obsidian
+3. Enable the plugin in Settings → Community Plugins
+
+### Building from Source
+
+1. Clone this repository
+2. Run `npm install` to install dependencies
+3. Run `npm run build` to build the plugin
+4. Copy `main.js` and `manifest.json` to your vault's plugins folder
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Development mode (auto-rebuild on changes)
+npm run dev
+```
+
+## Support
+
+If you encounter any issues or have suggestions, please open an issue on GitHub.
+
+## License
+
+MIT
