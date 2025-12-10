@@ -2,10 +2,12 @@ import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } 
 
 interface AutoCapitalizeSettings {
 	exceptionPatterns: string[];
+	preserveCapitalizationWords: string[];
 }
 
 const DEFAULT_SETTINGS: AutoCapitalizeSettings = {
-	exceptionPatterns: ['Q:', 'A:']
+	exceptionPatterns: ['Q:', 'A:'],
+	preserveCapitalizationWords: []
 }
 
 export default class AutoCapitalizePlugin extends Plugin {
@@ -159,6 +161,12 @@ export default class AutoCapitalizePlugin extends Plugin {
 		if (text.length >= 2 && text.charAt(0) === text.charAt(0).toUpperCase() && text.charAt(1) === text.charAt(1).toUpperCase() && /[A-Z]/.test(text.charAt(1))) {
 			return text;
 		}
+		const firstWord = text.split(/\s/)[0];
+		for (const word of this.settings.preserveCapitalizationWords) {
+			if (firstWord === word) {
+				return text;
+			}
+		}
 		return text.charAt(0).toLowerCase() + text.slice(1);
 	}
 
@@ -237,6 +245,51 @@ class AutoCapitalizeSettingTab extends PluginSettingTab {
 						}
 					});
 			});
+
+		containerEl.createEl('h3', { text: 'Preserve capitalization' });
+
+		containerEl.createEl('p', {
+			text: 'Words that should never be decapitalized (e.g., proper nouns like "Fourier", "Tbilisi").',
+			cls: 'setting-item-description'
+		});
+
+		new Setting(containerEl)
+			.setName('Preserved words')
+			.setDesc('Words that will keep their original capitalization');
+
+		const wordsContainer = containerEl.createDiv('auto-capitalize-words-list');
+		this.renderWordsList(wordsContainer);
+
+		new Setting(containerEl)
+			.setName('Add new word')
+			.setDesc('Enter a word to preserve (e.g., "Fourier", "Tbilisi")')
+			.addText(text => {
+				text.setPlaceholder('Enter word (e.g., Fourier)');
+				return text;
+			})
+			.addButton(button => {
+				button
+					.setButtonText('Add')
+					.setCta()
+					.onClick(async () => {
+						const input = button.buttonEl.parentElement?.querySelector('input');
+						if (input && input.value.trim()) {
+							const newWord = input.value.trim();
+
+							if (this.plugin.settings.preserveCapitalizationWords.includes(newWord)) {
+								new Notice('Word already exists');
+								return;
+							}
+
+							this.plugin.settings.preserveCapitalizationWords.push(newWord);
+							await this.plugin.saveSettings();
+							input.value = '';
+
+							this.renderWordsList(wordsContainer);
+							new Notice(`Added word: ${newWord}`);
+						}
+					});
+			});
 	}
 
 	renderPatternsList(container: HTMLElement): void {
@@ -262,6 +315,34 @@ class AutoCapitalizeSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 							this.renderPatternsList(container);
 							new Notice(`Removed pattern: ${pattern}`);
+						});
+				});
+		});
+	}
+
+	renderWordsList(container: HTMLElement): void {
+		container.empty();
+
+		if (this.plugin.settings.preserveCapitalizationWords.length === 0) {
+			container.createEl('p', {
+				text: 'No preserved words configured.',
+				cls: 'setting-item-description'
+			});
+			return;
+		}
+
+		this.plugin.settings.preserveCapitalizationWords.forEach((word, index) => {
+			new Setting(container)
+				.setName(word)
+				.addButton(button => {
+					button
+						.setButtonText('Remove')
+						.setWarning()
+						.onClick(async () => {
+							this.plugin.settings.preserveCapitalizationWords.splice(index, 1);
+							await this.plugin.saveSettings();
+							this.renderWordsList(container);
+							new Notice(`Removed word: ${word}`);
 						});
 				});
 		});
