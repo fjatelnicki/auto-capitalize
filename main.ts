@@ -161,7 +161,14 @@ export default class AutoCapitalizePlugin extends Plugin {
 		if (text.length >= 2 && text.charAt(0) === text.charAt(0).toUpperCase() && text.charAt(1) === text.charAt(1).toUpperCase() && /[A-Z]/.test(text.charAt(1))) {
 			return text;
 		}
-		const firstWord = text.split(/\s/)[0];
+		const words = text.split(/\s+/);
+		if (words.length > 1) {
+			const otherWordsCapitalized = words.slice(1).some(word => word.length > 0 && /[A-Z]/.test(word.charAt(0)));
+			if (otherWordsCapitalized) {
+				return text;
+			}
+		}
+		const firstWord = words[0];
 		for (const word of this.settings.preserveCapitalizationWords) {
 			if (firstWord === word) {
 				return text;
